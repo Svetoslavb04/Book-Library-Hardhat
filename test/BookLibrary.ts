@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 describe("Book Library", () => {
   async function deployBookLibraryFixture() {
@@ -200,6 +201,65 @@ describe("Book Library", () => {
           "You haven't borrowed that book!",
         );
       });
+    });
+  });
+
+  describe("Events", () => {
+    it("Should emit BookAdded event", async () => {
+      const { bookLibrary } = await loadFixture(deployBookLibraryFixture);
+
+      const bookTitle = "Test Book";
+      const bookCopies = 2;
+
+      await expect(bookLibrary.addBook(bookTitle, bookCopies))
+        .to.emit(bookLibrary, "BookAdded")
+        .withArgs(anyValue, "Test Book", 2);
+    });
+
+    it("Should emit BookUpdate event", async () => {
+      const { bookLibrary } = await loadFixture(deployBookLibraryFixture);
+
+      const bookTitle = "Test Book";
+      const bookCopies = 2;
+
+      await bookLibrary.addBook(bookTitle, bookCopies);
+
+      await expect(bookLibrary.addBook(bookTitle, bookCopies))
+        .to.emit(bookLibrary, "BookUpdated")
+        .withArgs(anyValue, "Test Book", 4);
+    });
+
+    it("Should emit BookBorrowed event", async () => {
+      const { bookLibrary, owner } = await loadFixture(
+        deployBookLibraryFixture,
+      );
+
+      const bookTitle = "Test Book";
+      const bookCopies = 2;
+
+      await bookLibrary.addBook(bookTitle, bookCopies);
+      const bookKey = await bookLibrary.bookKeys(0);
+
+      await expect(bookLibrary.borrowBook(bookKey))
+        .to.emit(bookLibrary, "BookBorrowed")
+        .withArgs(bookKey, owner.address, 1);
+    });
+
+    it("Should emit BookReturned event", async () => {
+      const { bookLibrary, owner } = await loadFixture(
+        deployBookLibraryFixture,
+      );
+
+      const bookTitle = "Test Book";
+      const bookCopies = 2;
+
+      await bookLibrary.addBook(bookTitle, bookCopies);
+      const bookKey = await bookLibrary.bookKeys(0);
+      await bookLibrary.borrowBook(bookKey);
+
+      await expect(bookLibrary.returnBook(bookKey))
+        .to.emit(bookLibrary, "BookReturned")
+        .withArgs(bookKey, owner.address, 2);
     });
   });
 });
