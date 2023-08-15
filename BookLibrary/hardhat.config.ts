@@ -15,6 +15,13 @@ task("contract-info", "Gets contract info by address")
     await main(address);
   });
 
+task("interact", "Interacts with Book Library").setAction(
+  async (taskArgs, hre) => {
+    const { main } = await lazyImport("./scripts/interact.ts");
+    await main(hre.network.name);
+  },
+);
+
 const config: HardhatUserConfig = {
   networks: {
     sepolia: {

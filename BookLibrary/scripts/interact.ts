@@ -1,21 +1,17 @@
-require("dotenv").config();
-const { ethers, Contract } = require("ethers");
+import { ethers } from "ethers";
+import { BookLibrary, BookLibrary__factory } from "../typechain-types";
 
-const BookLibrary = require("../BookLibrary/artifacts/contracts/BookLibrary.sol/BookLibrary.json");
-
-const INFURA_API_KEY = process.env.INFURA_API_KEY;
-const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY;
+const INFURA_API_KEY = process.env.INFURA_API_KEY || "";
+const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY || "";
 
 const sepoliaContractAddress = "0x123e44503Bb2653d41509c0F31bf65E4341794Ad";
 
-const interactWith = {
+const networks = {
   sepolia: "sepolia",
-  hardhatNode: "local",
+  hardhatNode: "localhost",
 };
 
-run(interactWith.hardhatNode);
-
-async function run(interactWithChoice = interactWith.sepolia) {
+export async function main(network: string) {
   const localNodePrivateKey =
     "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
   const localNodeContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -24,22 +20,24 @@ async function run(interactWithChoice = interactWith.sepolia) {
   let wallet = null;
   let bookLibraryContract = null;
 
-  if (interactWithChoice === interactWith.hardhatNode) {
+  if (network === networks.hardhatNode) {
     provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545/");
     wallet = new ethers.Wallet(localNodePrivateKey, provider);
-    bookLibraryContract = new Contract(
+    bookLibraryContract = BookLibrary__factory.connect(
       localNodeContractAddress,
-      BookLibrary.abi,
-      wallet
+      wallet,
     );
-  } else if (interactWithChoice === interactWith.sepolia) {
+  } else if (network === networks.sepolia) {
     provider = new ethers.InfuraProvider("sepolia", INFURA_API_KEY);
     wallet = new ethers.Wallet(SEPOLIA_PRIVATE_KEY, provider);
-    bookLibraryContract = new Contract(
+    bookLibraryContract = BookLibrary__factory.connect(
       sepoliaContractAddress,
-      BookLibrary.abi,
-      wallet
+      wallet,
     );
+  }
+
+  if (!bookLibraryContract || !wallet) {
+    return;
   }
 
   let allBooksKeys = await getAllBooksKeys(bookLibraryContract);
@@ -55,10 +53,10 @@ async function run(interactWithChoice = interactWith.sepolia) {
     const addBookTransactionReceipt = await addBook(
       bookLibraryContract,
       bookTitle,
-      bookCopies
+      bookCopies,
     );
 
-    if (addBookTransactionReceipt.status != 1) {
+    if (addBookTransactionReceipt?.status != 1) {
       console.log("Transaction was not successful");
     } else {
       const bookKey = await bookLibraryContract.bookKeys(0);
@@ -78,17 +76,17 @@ async function run(interactWithChoice = interactWith.sepolia) {
 
     const borrowBookTransactionReceipt = await borrowBook(
       bookLibraryContract,
-      allBooksKeys[0]
+      allBooksKeys[0],
     );
 
-    if (borrowBookTransactionReceipt.status !== 1) {
+    if (borrowBookTransactionReceipt?.status !== 1) {
       console.log("Borrowing the book was not successful");
     } else {
       console.log("Successfully borrowed the book!");
     }
     console.log("----------");
-  } catch (error) {
-    console.log(error.reason);
+  } catch (error: any) {
+    console.log(error?.reason);
     console.log("----------");
   }
 
@@ -98,10 +96,12 @@ async function run(interactWithChoice = interactWith.sepolia) {
   if (bookBorrowers.includes(wallet.address)) {
     console.log("----------");
     console.log(
-      `It is confirmed that wallet: \n${wallet.address} has borrowed book: \n${firstBookKey}`
+      `It is confirmed that wallet: \n${wallet.address} has borrowed book: \n${firstBookKey}`,
     );
     console.log("----------");
   }
+
+  await printIsAvailableForBorrow(bookLibraryContract, firstBookKey);
 
   try {
     console.log("----------");
@@ -109,17 +109,17 @@ async function run(interactWithChoice = interactWith.sepolia) {
 
     const returnBookTransactionReceipt = await returnBook(
       bookLibraryContract,
-      firstBookKey
+      firstBookKey,
     );
 
-    if (returnBookTransactionReceipt.status !== 1) {
+    if (returnBookTransactionReceipt?.status !== 1) {
       console.log("Returning the book was not successful");
     } else {
       console.log("Successfully returned the book!");
     }
     console.log("----------");
-  } catch (error) {
-    console.log(error.reason);
+  } catch (error: any) {
+    console.log(error?.reason);
     console.log("----------");
   }
 
@@ -134,21 +134,20 @@ async function run(interactWithChoice = interactWith.sepolia) {
     const addBookTransactionReceipt = await addBook(
       bookLibraryContract,
       bookTitle,
-      bookCopies
+      bookCopies,
     );
 
-    if (addBookTransactionReceipt.status != 1) {
+    if (addBookTransactionReceipt?.status != 1) {
       console.log("Transaction was not successful");
     } else {
       const bookKey = await bookLibraryContract.bookKeys(0);
-      console.log(`Since there were no books, one has been added.`);
       console.log(`Book key: ${bookKey}`);
       console.log(`Book title: ${bookTitle}`);
       console.log(`Book copies: ${bookCopies}`);
       console.log("----------");
     }
-  } catch (error) {
-    console.log(error.reason);
+  } catch (error: any) {
+    console.log(error?.reason);
     console.log("----------");
   }
 
@@ -156,7 +155,7 @@ async function run(interactWithChoice = interactWith.sepolia) {
   console.log(allBooksInfo);
 }
 
-async function getAllBooksKeys(bookLibraryContract) {
+async function getAllBooksKeys(bookLibraryContract: BookLibrary) {
   let bookKeys = [];
 
   let bookAvailable = true;
@@ -179,7 +178,7 @@ async function getAllBooksKeys(bookLibraryContract) {
   return bookKeys;
 }
 
-async function getAllBooks(bookLibraryContract) {
+async function getAllBooks(bookLibraryContract: BookLibrary) {
   const bookKeys = await getAllBooksKeys(bookLibraryContract);
 
   let books = [];
@@ -198,14 +197,18 @@ async function getAllBooks(bookLibraryContract) {
   return books;
 }
 
-async function getAllAvailableBookKeys(bookLibraryContract) {
+async function getAllAvailableBookKeys(bookLibraryContract: BookLibrary) {
   const books = await getAllBooks(bookLibraryContract);
 
   let availableBooks = books.filter((b) => b.copies > 0);
   return availableBooks;
 }
 
-async function addBook(bookLibraryContract, bookTitle, bookCopies) {
+async function addBook(
+  bookLibraryContract: BookLibrary,
+  bookTitle: string,
+  bookCopies: number,
+) {
   const transaction = await bookLibraryContract.addBook(bookTitle, bookCopies);
   console.log(`Add Book transaction: ${transaction.hash}`);
 
@@ -214,7 +217,7 @@ async function addBook(bookLibraryContract, bookTitle, bookCopies) {
   return transactionReceipt;
 }
 
-async function borrowBook(bookLibraryContract, bookKey) {
+async function borrowBook(bookLibraryContract: BookLibrary, bookKey: string) {
   const transaction = await bookLibraryContract.borrowBook(bookKey);
   console.log(`Borrow Book transaction: ${transaction.hash}`);
 
@@ -223,7 +226,7 @@ async function borrowBook(bookLibraryContract, bookKey) {
   return transactionReceipt;
 }
 
-async function returnBook(bookLibraryContract, bookKey) {
+async function returnBook(bookLibraryContract: BookLibrary, bookKey: string) {
   const transaction = await bookLibraryContract.returnBook(bookKey);
   console.log(`Return Book transaction: ${transaction.hash}`);
 
@@ -232,13 +235,18 @@ async function returnBook(bookLibraryContract, bookKey) {
   return transactionReceipt;
 }
 
-async function printIsAvailableForBorrow(bookLibraryContract, bookKey) {
+async function printIsAvailableForBorrow(
+  bookLibraryContract: BookLibrary,
+  bookKey: string,
+) {
   let availableBooks = await getAllAvailableBookKeys(bookLibraryContract);
+  let bookKeys = availableBooks.map((b) => b.key);
+
   console.log("----------");
   console.log(
     `Book: ${bookKey} is${
-      availableBooks.includes(bookKey) ? "" : " not"
-    } available for borrowing`
+      bookKeys.includes(bookKey) ? "" : " not"
+    } available for borrowing`,
   );
   console.log("----------");
 }
