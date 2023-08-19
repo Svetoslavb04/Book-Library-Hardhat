@@ -10,5 +10,5 @@ The following environment variables are required:
 
 Run `npx hardhat help` to see all available commands
 
-Contract address: 0x123e44503Bb2653d41509c0F31bf65E4341794Ad
-Contract link: https://sepolia.etherscan.io/address/0x123e44503Bb2653d41509c0F31bf65E4341794Ad#code
+Contract address: 0xD1ce8131efef76c36B189af86c1FB0b897Cff74D
+Contract link: https://sepolia.etherscan.io/address/0xD1ce8131efef76c36B189af86c1FB0b897Cff74D#code
