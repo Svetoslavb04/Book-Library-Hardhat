@@ -105,6 +105,7 @@ contract BookLibrary is Ownable {
     }
 
     /// @dev Returns the length of the book keys array
+    /// @return length The length of bookKeys
     function getBookKeysLength() external view returns (uint256 length) {
         length = bookKeys.length;
     }
