@@ -104,6 +104,11 @@ contract BookLibrary is Ownable {
         emit BookReturned(_bookId, msg.sender, books[_bookId].copies);
     }
 
+    /// @dev Returns the length of the book keys array
+    function getBookKeysLength() external view returns (uint256 length) {
+        length = bookKeys.length;
+    }
+
     /// @dev Retrieves the list of borrowers for a specific book.
     /// @param _bookId The unique key of the book.
     /// @return borrowers The array of addresses of users who borrowed the book.

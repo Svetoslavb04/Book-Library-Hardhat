@@ -104,6 +104,19 @@ describe("Book Library", () => {
       });
     });
 
+    describe("Return Book", () => {
+      it("Should correctly return book keys array length", async () => {
+        const { bookLibrary } = await loadFixture(deployBookLibraryFixture);
+
+        const bookTitle = "Test Book";
+        const bookCopies = 2;
+
+        await bookLibrary.addBook(bookTitle, bookCopies);
+
+        expect(await bookLibrary.getBookKeysLength()).to.equal(1);
+      });
+    });
+
     describe("Get Book Borrowers", () => {
       it("Should correctly return book borrowers", async () => {
         const { bookLibrary, owner, otherAccount } = await loadFixture(
