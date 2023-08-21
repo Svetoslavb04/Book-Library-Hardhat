@@ -4,7 +4,7 @@ import { BookLibrary, BookLibrary__factory } from "../typechain-types";
 const INFURA_API_KEY = process.env.INFURA_API_KEY || "";
 const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY || "";
 
-const sepoliaContractAddress = "0x123e44503Bb2653d41509c0F31bf65E4341794Ad";
+const sepoliaContractAddress = "0xD1ce8131efef76c36B189af86c1FB0b897Cff74D";
 
 const networks = {
   sepolia: "sepolia",
